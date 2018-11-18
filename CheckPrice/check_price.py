@@ -8,7 +8,8 @@ from re import compile
 
 
 class Check_Price():
-    #Columns for the resulting ouptut to csv file
+
+    # Columns for the resulting output to csv file
     COLUMNS = ["DATE", "TITLE", "PRICE", "URL"]
 
     # make an empty file if it isn't present
@@ -36,6 +37,15 @@ class Check_Price():
             return urls
         else:
             return argv[1:]
+    
+    # Check the name off company
+    def check_company(self, url):
+        if "flipkart.com" in url:
+            return "Flipkart"
+        elif "amazon.in" in url:
+            return "Amazon"
+        else:
+            return None
 
     # Download the page using request
     def download_page(self, url):
@@ -43,13 +53,21 @@ class Check_Price():
         page = requests.get(url, headers=headers)
         return page
 
-    # Start scraping and return title, price
-    def scrape(self, page):
+    # Start scraping Amazon and return title, price
+    def scrape_amazon(self, page):
         soup = BS(page, "lxml")                                             # Build the BeautifulSoup object
         title_ele = soup.find("div", id="title_feature_div")                # Title block
         title = title_ele.find("span", id="productTitle").text.strip()      # Title of the product
         price_ele = soup.find("div", id="unifiedPrice_feature_div")         # Price block
         price = price_ele.find("span", id=compile(r"priceblock_")).text.strip()     # Price of product
+        return title, price
+
+    # Start scraping Flipkart
+    def scrape_flipkart(self, page):
+        soup = BS(page, "lxml")
+        content_block = soup.find("div", class_="_29OxBi")
+        title = content_block.find("span", class_="_35KyD6").text.encode("ascii", "ignore").decode("utf-8").strip()
+        price = content_block.find("div", class_="_1vC4OE _3qQ9m1").text
         return title, price
 
     # Write the output to a file inorder to check the previous prices
@@ -66,8 +84,15 @@ class Check_Price():
             print("current URL:", url)
             page = self.download_page(url)
             if page.status_code == 200:                         # If requests.get was unable to fetch url data
-                title, price = self.scrape(page.text)
-                self.write_to_file(title, price, url)
+                company = self.check_company(url)
+                if company == "Amazon":
+                    title, price = self.scrape_amazon(page.text)
+                    self.write_to_file(title, price, url)
+                elif company == "Flipkart":
+                    title, price = self.scrape_flipkart(page.text)
+                    self.write_to_file(title, price, url)
+                else:
+                    print("Can't get to any other website except Flipkart and Amazon.")
             else:
                 print("URL not available")
 
