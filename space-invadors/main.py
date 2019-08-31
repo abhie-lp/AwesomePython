@@ -23,12 +23,21 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Space Invadors")
 clock = pygame.time.Clock()
+font_name = pygame.font.match_font("arial")
 
 
 def create_new_asteroid():
     a = Asteroids()
     all_sprites.add(a)
     asteroids.add(a)
+
+
+def draw_text(surf, text, size, x, y):
+    font = pygame.font.Font(font_name, size)
+    text_surface = font.render(text, True, WHITE)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surf.blit(text_surface, text_rect)
 
 
 # Player
@@ -71,7 +80,7 @@ class Asteroids(pygame.sprite.Sprite):
         self.image_orig = random.choice(asteroid_imgs)
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect()
-        self.radius = int(self.rect.width * .9 // 2)
+        self.radius = int(self.rect.width * .85 // 2)
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randint(-100, 100)
         self.speedy = random.randint(1, 8)
@@ -79,6 +88,7 @@ class Asteroids(pygame.sprite.Sprite):
         self.rot = 0
         self.rot_speed = random.randint(-8, 8)
         self.last_update = pygame.time.get_ticks()
+        self.damage = 2
 
     def rotate(self):
         now = pygame.time.get_ticks()
@@ -162,6 +172,8 @@ for i in range(8):
     all_sprites.add(m)
     asteroids.add(m)
 
+score = 0
+
 # Game loop
 running = True
 while running:
@@ -181,9 +193,23 @@ while running:
     all_sprites.update()
 
     # If BULLETS hits ASTEROIDS
-    hits = pygame.sprite.groupcollide(asteroids, bullets, True, True)
+    hits = pygame.sprite.groupcollide(asteroids, bullets, False, True)
     if hits:
         for hit in hits:
+            if hit.radius < 8:
+                score += 5
+            elif hit.radius < 13:
+                score += 4
+            elif hit.radius < 20:
+                score += 3
+            else:
+                print(hit.damage)
+                if hit.damage == 0:
+                    score += 2
+                else:
+                    hit.damage -= 1
+                    continue
+            hit.kill()
             m = Asteroids()
             all_sprites.add(m)
             asteroids.add(m)
@@ -200,6 +226,7 @@ while running:
     screen.fill(BLACK)
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
+    draw_text(screen, str(score), 18, WIDTH/2, 10)
 
     # *after* drawing everything, flip the display
     pygame.display.flip()
