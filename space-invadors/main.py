@@ -41,6 +41,18 @@ def draw_text(surf, text, size, x, y):
     surf.blit(text_surface, text_rect)
 
 
+def draw_health_bar(surf, x, y, value):
+    if value < 0:
+        value = 0
+    bar_length = 100
+    bar_height = 10
+    pct = (value / 100) * bar_length
+    outline_rect = pygame.Rect(x, y, bar_length, bar_height)
+    inside_rect = pygame.Rect(x, y, pct, bar_height)
+    pygame.draw.rect(surf, GREEN, inside_rect)
+    pygame.draw.rect(surf, WHITE, outline_rect, 2)
+
+
 # Player
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -52,6 +64,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH // 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
+        self.health = 100
 
     def update(self, *args):
         self.speedx = 0
@@ -180,9 +193,7 @@ bullets = pygame.sprite.Group()
 # Registering the sprites
 all_sprites.add(player)
 for i in range(8):
-    m = Asteroids()
-    all_sprites.add(m)
-    asteroids.add(m)
+    create_new_asteroid()
 
 score = 0
 
@@ -223,23 +234,32 @@ while running:
                     continue
             hit.kill()
             random.choice(expl_sounds).play()
-            m = Asteroids()
-            all_sprites.add(m)
-            asteroids.add(m)
+            create_new_asteroid()
 
     # If ASTEROIDS hits the PLAYER
     hits = pygame.sprite.spritecollide(player,
                                        asteroids,
-                                       False,
+                                       True,
                                        pygame.sprite.collide_circle)
-    if hits:
-        running = False
+    for hit in hits:
+        if hit.radius < 8:
+            player.health -= 23
+        elif hit.radius < 13:
+            player.health -= 28
+        elif hit.radius < 20:
+            player.health -= 35
+        else:
+            player.health -= 40
+        if player.health < 0:
+            running = False
+        create_new_asteroid()
 
     # Draw / render
     screen.fill(BLACK)
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
     draw_text(screen, str(score), 18, WIDTH/2, 10)
+    draw_health_bar(screen, 5, 5, player.health)
 
     # *after* drawing everything, flip the display
     pygame.display.flip()
