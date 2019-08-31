@@ -49,6 +49,11 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.left <= 0:
             self.rect.left = 0
 
+    def shoot(self):
+        bullet = Bullet(self.rect.centerx, self.rect.top)
+        all_sprites.add(bullet)
+        bullets.add(bullet)
+
 
 # Asteroids
 class Asteroids(pygame.sprite.Sprite):
@@ -77,11 +82,30 @@ class Asteroids(pygame.sprite.Sprite):
             self.speedy = random.randint(1, 8)
 
 
+# BULLETS
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 20))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect()
+        self.rect.bottom = y
+        self.rect.centerx = x
+        self.speedy = -10
+
+    def update(self, *args):
+        self.rect.y += self.speedy
+
+        if self.rect.bottom < 0:
+            self.kill()
+
+
 # Intialising Sprites
 player = Player()
 
 all_sprites = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 
 # Registering the sprites
 all_sprites.add(player)
@@ -101,6 +125,9 @@ while running:
         # check for closing the window
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.shoot()
 
     # Update
     all_sprites.update()
