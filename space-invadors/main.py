@@ -38,6 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img, (50, 40))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
+        self.radius = 18
         self.rect.centerx = WIDTH // 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
@@ -70,6 +71,7 @@ class Asteroids(pygame.sprite.Sprite):
         self.image = asteroid_img
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
+        self.radius = int(self.rect.width * .9 // 2)
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randint(-100, 100)
         self.speedy = random.randint(1, 8)
@@ -163,7 +165,10 @@ while running:
             asteroids.add(m)
 
     # If ASTEROIDS hits the PLAYER
-    hits = pygame.sprite.spritecollide(player, asteroids, False)
+    hits = pygame.sprite.spritecollide(player,
+                                       asteroids,
+                                       False,
+                                       pygame.sprite.collide_circle)
     if hits:
         running = False
 
