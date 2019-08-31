@@ -132,6 +132,14 @@ while running:
     # Update
     all_sprites.update()
 
+    # If BULLETS hits ASTEROIDS
+    hits = pygame.sprite.groupcollide(asteroids, bullets, True, True)
+    if hits:
+        for hit in hits:
+            m = Asteroids()
+            all_sprites.add(m)
+            asteroids.add(m)
+
     # If ASTEROIDS hits the PLAYER
     hits = pygame.sprite.spritecollide(player, asteroids, False)
     if hits:
