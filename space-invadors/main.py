@@ -4,9 +4,9 @@ import sys
 import pygame
 
 
-WIDTH = 360
-HEIGHT = 480
-FPS = 30
+WIDTH = 480
+HEIGHT = 640
+FPS = 60
 
 # define colors
 WHITE = (255, 255, 255)
@@ -22,7 +22,29 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Space Invadors")
 clock = pygame.time.Clock()
 
+# Sprites
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((50, 40))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = WIDTH // 2
+        self.rect.bottom = HEIGHT - 10
+        self.speedx = 0
+
+    def update(self, *args):
+        self.rect.x += self.speedx
+
+
+# Intialising Sprites
+player = Player()
+
+# Registering the sprites
 all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
 
 # Game loop
 running = True
