@@ -68,8 +68,7 @@ class Player(pygame.sprite.Sprite):
 class Asteroids(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image_orig = asteroid_img
-        self.image_orig.set_colorkey(BLACK)
+        self.image_orig = random.choice(asteroid_imgs)
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width * .9 // 2)
@@ -134,12 +133,20 @@ background_rect = background.get_rect()
 player_img = pygame.image.load(
     os.path.join(img_dir, "img", "playerShip3_blue.png")
 ).convert()
-asteroid_img = pygame.image.load(
-    os.path.join(img_dir, "img", "meteorBrown_med3.png")
-).convert()
 bullet_img = pygame.image.load(
     os.path.join(img_dir, "img", "laserRed16.png")
 ).convert()
+
+asteroid_imgs = []
+asteroid_list = ["meteorBrown_big2.png", "meteorBrown_big4.png",
+                 "meteorBrown_med1.png", "meteorBrown_med3.png",
+                 "meteorBrown_small1.png", "meteorBrown_small2.png",
+                 "meteorGrey_tiny1.png", "meteorGrey_tiny2.png"]
+
+for img in asteroid_list:
+    asteroid_imgs.append(pygame.image.load(
+        os.path.join(img_dir, "img", img)
+    ))
 
 # Intialising Sprites
 player = Player()
