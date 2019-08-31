@@ -65,6 +65,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
         self.health = 100
+        self.shoot_delay = 250
+        self.last_shot = pygame.time.get_ticks()
 
     def update(self, *args):
         self.speedx = 0
@@ -73,6 +75,9 @@ class Player(pygame.sprite.Sprite):
             self.speedx = -5
         elif keystate[pygame.K_RIGHT]:
             self.speedx = 5
+        if keystate[pygame.K_SPACE]:
+            self.shoot()
+
         self.rect.x += self.speedx
 
         # Check if the player is out of bounds
@@ -82,10 +87,13 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
 
     def shoot(self):
-        bullet = Bullet(self.rect.centerx, self.rect.top)
-        all_sprites.add(bullet)
-        bullets.add(bullet)
-        shoot_snd.play()
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            bullet = Bullet(self.rect.centerx, self.rect.top)
+            all_sprites.add(bullet)
+            bullets.add(bullet)
+            shoot_snd.play()
 
 
 # Asteroids
@@ -209,9 +217,6 @@ while running:
         # check for closing the window
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.shoot()
 
     # Update
     all_sprites.update()
@@ -220,6 +225,7 @@ while running:
     hits = pygame.sprite.groupcollide(asteroids, bullets, False, True)
     if hits:
         for hit in hits:
+            big_asteroid = False
             if hit.radius < 8:
                 score += 5
             elif hit.radius < 13:
@@ -231,10 +237,11 @@ while running:
                     score += 2
                 else:
                     hit.damage -= 1
-                    continue
-            hit.kill()
-            random.choice(expl_sounds).play()
-            create_new_asteroid()
+                    big_asteroid = True
+            if not big_asteroid:
+                hit.kill()
+                random.choice(expl_sounds).play()
+                create_new_asteroid()
 
     # If ASTEROIDS hits the PLAYER
     hits = pygame.sprite.spritecollide(player,
