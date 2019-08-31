@@ -85,8 +85,12 @@ class Asteroids(pygame.sprite.Sprite):
         now = pygame.time.get_ticks()
         if now - self.last_update > 50:
             self.rot = (self.rot + self.rot_speed) % 360
-            self.image = pygame.transform.rotate(self.image_orig,
-                                                 self.rot)
+            new_image = pygame.transform.rotate(self.image_orig,
+                                                self.rot)
+            old_center = self.rect.center
+            self.image = new_image
+            self.rect = self.image.get_rect()
+            self.rect.center = old_center
             self.last_update = now
 
     def update(self, *args):
