@@ -68,16 +68,29 @@ class Player(pygame.sprite.Sprite):
 class Asteroids(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = asteroid_img
-        self.image.set_colorkey(BLACK)
+        self.image_orig = asteroid_img
+        self.image_orig.set_colorkey(BLACK)
+        self.image = self.image_orig.copy()
         self.rect = self.image.get_rect()
         self.radius = int(self.rect.width * .9 // 2)
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randint(-100, 100)
         self.speedy = random.randint(1, 8)
         self.speedx = random.choice([-7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7])
+        self.rot = 0
+        self.rot_speed = random.randint(-8, 8)
+        self.last_update = pygame.time.get_ticks()
+
+    def rotate(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > 50:
+            self.rot = (self.rot + self.rot_speed) % 360
+            self.image = pygame.transform.rotate(self.image_orig,
+                                                 self.rot)
+            self.last_update = now
 
     def update(self, *args):
+        self.rotate()
         if self.rect.left < 0:
             self.speedx *= -1
         elif self.rect.right > WIDTH:
