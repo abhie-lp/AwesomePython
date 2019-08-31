@@ -22,9 +22,8 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Space Invadors")
 clock = pygame.time.Clock()
 
-# Sprites
 
-
+# Player
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -51,12 +50,45 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
 
 
+# Asteroids
+class Asteroids(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((30, 40))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(WIDTH - self.rect.width)
+        self.rect.y = random.randint(-100, 100)
+        self.speedy = random.randint(1, 8)
+        self.speedx = random.choice([-7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7])
+
+    def update(self, *args):
+        if self.rect.left < 0:
+            self.speedx *= -1
+        elif self.rect.right > WIDTH:
+            self.speedx *= -1
+
+        self.rect.x += self.speedx
+        self.rect.y += self.speedy
+
+        if self.rect.top > HEIGHT + 10:
+            self.rect.x = random.randrange(WIDTH - self.rect.width)
+            self.rect.y = random.randint(-100, 100)
+            self.speedy = random.randint(1, 8)
+
+
 # Intialising Sprites
 player = Player()
 
-# Registering the sprites
 all_sprites = pygame.sprite.Group()
+asteroids = pygame.sprite.Group()
+
+# Registering the sprites
 all_sprites.add(player)
+for i in range(8):
+    m = Asteroids()
+    all_sprites.add(m)
+    asteroids.add(m)
 
 # Game loop
 running = True
