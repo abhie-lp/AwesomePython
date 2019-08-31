@@ -1,11 +1,13 @@
 # Space invadors
+import os
 import random
 import sys
 import pygame
 
+img_dir = os.path.dirname(__file__)
 
 WIDTH = 480
-HEIGHT = 640
+HEIGHT = 600
 FPS = 60
 
 # define colors
@@ -23,12 +25,18 @@ pygame.display.set_caption("Space Invadors")
 clock = pygame.time.Clock()
 
 
+def create_new_asteroid():
+    a = Asteroids()
+    all_sprites.add(a)
+    asteroids.add(a)
+
+
 # Player
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((50, 40))
-        self.image.fill(GREEN)
+        self.image = pygame.transform.scale(player_img, (50, 40))
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH // 2
         self.rect.bottom = HEIGHT - 10
@@ -59,8 +67,8 @@ class Player(pygame.sprite.Sprite):
 class Asteroids(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30, 40))
-        self.image.fill(RED)
+        self.image = asteroid_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randint(-100, 100)
@@ -77,17 +85,16 @@ class Asteroids(pygame.sprite.Sprite):
         self.rect.y += self.speedy
 
         if self.rect.top > HEIGHT + 10:
-            self.rect.x = random.randrange(WIDTH - self.rect.width)
-            self.rect.y = random.randint(-100, 100)
-            self.speedy = random.randint(1, 8)
+            self.kill()
+            create_new_asteroid()
 
 
 # BULLETS
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 20))
-        self.image.fill(BLUE)
+        self.image = bullet_img
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
@@ -99,6 +106,21 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.bottom < 0:
             self.kill()
 
+
+# Load all the game graphics
+background = pygame.image.load(
+    os.path.join(img_dir, "img", "background.png")
+).convert()
+background_rect = background.get_rect()
+player_img = pygame.image.load(
+    os.path.join(img_dir, "img", "playerShip3_blue.png")
+).convert()
+asteroid_img = pygame.image.load(
+    os.path.join(img_dir, "img", "meteorBrown_med3.png")
+).convert()
+bullet_img = pygame.image.load(
+    os.path.join(img_dir, "img", "laserRed16.png")
+).convert()
 
 # Intialising Sprites
 player = Player()
@@ -147,9 +169,11 @@ while running:
 
     # Draw / render
     screen.fill(BLACK)
+    screen.blit(background, background_rect)
     all_sprites.draw(screen)
 
     # *after* drawing everything, flip the display
     pygame.display.flip()
 
 pygame.quit()
+sys.exit()
