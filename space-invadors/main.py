@@ -60,7 +60,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(player_img, (50, 40))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
-        self.radius = 18
+        self.radius = 19
         self.rect.centerx = WIDTH // 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
@@ -107,7 +107,7 @@ class Asteroids(pygame.sprite.Sprite):
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randint(-100, 100)
         self.speedy = random.randint(1, 8)
-        self.speedx = random.choice([-7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7])
+        self.speedx = random.choice([-6, -5, -4, -3, -2, 2, 3, 4, 5, 6])
         self.rot = 0
         self.rot_speed = random.randint(-8, 8)
         self.last_update = pygame.time.get_ticks()
@@ -158,6 +158,31 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center, size):
+        pygame.sprite.Sprite.__init__(self)
+        self.size = size
+        self.image = expl_grphics[self.size][0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 50
+
+    def update(self, *args):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(expl_grphics[self.size]):
+                self.kill()
+            else:
+                center = self.rect.center
+                self.image = expl_grphics[self.size][self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
+
+
 # Load all the game graphics
 background = pygame.image.load(
     os.path.join(img_dir, "img", "background.png")
@@ -180,6 +205,15 @@ for img in asteroid_list:
     asteroid_imgs.append(pygame.image.load(
         os.path.join(img_dir, "img", img)
     ))
+
+expl_grphics = {"lg": [], "sm": []}
+for i in range(9):
+    filename = "regularExplosion0{}.png".format(i)
+    img = pygame.image.load(os.path.join(img_dir, "img", filename))
+    img_lg = pygame.transform.scale(img, (75, 75))
+    expl_grphics["lg"].append(img_lg)
+    img_sm = pygame.transform.scale(img, (30, 30))
+    expl_grphics["sm"].append(img_sm)
 
 # Load all the game sounds
 shoot_snd = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "shoot.wav"))
@@ -238,8 +272,12 @@ while running:
                 else:
                     hit.damage -= 1
                     big_asteroid = True
+                    expl = Explosion(hit.rect.center, "sm")
+                    all_sprites.add(expl)
             if not big_asteroid:
                 hit.kill()
+                expl = Explosion(hit.rect.center, "lg")
+                all_sprites.add(expl)
                 random.choice(expl_sounds).play()
                 create_new_asteroid()
 
@@ -249,6 +287,8 @@ while running:
                                        True,
                                        pygame.sprite.collide_circle)
     for hit in hits:
+        expl = Explosion(hit.rect.center, "sm")
+        all_sprites.add(expl)
         if hit.radius < 8:
             player.health -= 23
         elif hit.radius < 13:
