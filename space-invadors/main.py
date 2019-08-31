@@ -36,7 +36,19 @@ class Player(pygame.sprite.Sprite):
         self.speedx = 0
 
     def update(self, *args):
+        self.speedx = 0
+        keystate = pygame.key.get_pressed()
+        if keystate[pygame.K_LEFT]:
+            self.speedx = -5
+        elif keystate[pygame.K_RIGHT]:
+            self.speedx = 5
         self.rect.x += self.speedx
+
+        # Check if the player is out of bounds
+        if self.rect.right >= WIDTH:
+            self.rect.right = WIDTH
+        elif self.rect.left <= 0:
+            self.rect.left = 0
 
 
 # Intialising Sprites
