@@ -105,6 +105,11 @@ while running:
     # Update
     all_sprites.update()
 
+    # If ASTEROIDS hits the PLAYER
+    hits = pygame.sprite.spritecollide(player, asteroids, False)
+    if hits:
+        running = False
+
     # Draw / render
     screen.fill(BLACK)
     all_sprites.draw(screen)
