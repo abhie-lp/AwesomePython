@@ -5,6 +5,7 @@ import sys
 import pygame
 
 img_dir = os.path.dirname(__file__)
+snd_dir = os.path.dirname(__file__)
 
 WIDTH = 480
 HEIGHT = 600
@@ -71,6 +72,7 @@ class Player(pygame.sprite.Sprite):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_sprites.add(bullet)
         bullets.add(bullet)
+        shoot_snd.play()
 
 
 # Asteroids
@@ -158,6 +160,16 @@ for img in asteroid_list:
         os.path.join(img_dir, "img", img)
     ))
 
+# Load all the game sounds
+shoot_snd = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "shoot.wav"))
+expl_sounds = []
+for snd in ["exp1.wav", "exp2.wav"]:
+    expl_sounds.append(pygame.mixer.Sound(os.path.join(snd_dir, "sound", snd)))
+
+pygame.mixer.music.load(os.path.join(snd_dir,
+                                     "sound",
+                                     "tgfcoder-FrozenJam-SeamlessLoop.mp3"))
+
 # Intialising Sprites
 player = Player()
 
@@ -176,6 +188,7 @@ score = 0
 
 # Game loop
 running = True
+pygame.mixer.music.play(loops=-1)
 while running:
     # keep loop running at the right speed
     clock.tick(FPS)
@@ -203,13 +216,13 @@ while running:
             elif hit.radius < 20:
                 score += 3
             else:
-                print(hit.damage)
                 if hit.damage == 0:
                     score += 2
                 else:
                     hit.damage -= 1
                     continue
             hit.kill()
+            random.choice(expl_sounds).play()
             m = Asteroids()
             all_sprites.add(m)
             asteroids.add(m)
