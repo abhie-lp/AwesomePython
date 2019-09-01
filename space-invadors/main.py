@@ -167,7 +167,7 @@ class Explosion(pygame.sprite.Sprite):
         self.rect.center = center
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
-        self.frame_rate = 50
+        self.frame_rate = 75
 
     def update(self, *args):
         now = pygame.time.get_ticks()
@@ -206,14 +206,19 @@ for img in asteroid_list:
         os.path.join(img_dir, "img", img)
     ))
 
-expl_grphics = {"lg": [], "sm": []}
+expl_grphics = {"lg": [], "sm": [], "player": []}
 for i in range(9):
     filename = "regularExplosion0{}.png".format(i)
     img = pygame.image.load(os.path.join(img_dir, "img", filename))
     img_lg = pygame.transform.scale(img, (75, 75))
     expl_grphics["lg"].append(img_lg)
-    img_sm = pygame.transform.scale(img, (30, 30))
+    img_sm = pygame.transform.scale(img, (25, 25))
     expl_grphics["sm"].append(img_sm)
+
+    # Player explosion
+    filename = "sonicExplosion0{}.png".format(i)
+    img = pygame.image.load(os.path.join(img_dir, "img", filename))
+    expl_grphics["player"].append(img)
 
 # Load all the game sounds
 shoot_snd = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "shoot.wav"))
@@ -298,8 +303,14 @@ while running:
         else:
             player.health -= 40
         if player.health < 0:
-            running = False
+            death_explosion = Explosion(player.rect.center, "player")
+            all_sprites.add(death_explosion)
+            player.kill()
         create_new_asteroid()
+
+    #  If the player dies and the explosion is finished
+    if not player.alive() and not death_explosion.alive():
+        running = False
 
     # Draw / render
     screen.fill(BLACK)
