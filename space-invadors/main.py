@@ -53,6 +53,14 @@ def draw_health_bar(surf, x, y, value):
     pygame.draw.rect(surf, WHITE, outline_rect, 2)
 
 
+def draw_lives(surf, x, y, lives, img):
+    for i in range(lives):
+        img_rect = img.get_rect()
+        img_rect.x = x + 30 * i
+        img_rect.y = y
+        surf.blit(img, img_rect)
+
+
 # Player
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -67,8 +75,15 @@ class Player(pygame.sprite.Sprite):
         self.health = 100
         self.shoot_delay = 250
         self.last_shot = pygame.time.get_ticks()
+        self.lives = 3
+        self.hidden = False
+        self.hide_timer = pygame.time.get_ticks()
 
     def update(self, *args):
+        if self.hidden and pygame.time.get_ticks() - self.hide_timer > 1000:
+            self.hidden = False
+            self.rect.centerx = WIDTH // 2
+            self.rect.bottom = HEIGHT - 10
         self.speedx = 0
         keystate = pygame.key.get_pressed()
         if keystate[pygame.K_LEFT]:
@@ -94,6 +109,11 @@ class Player(pygame.sprite.Sprite):
             all_sprites.add(bullet)
             bullets.add(bullet)
             shoot_snd.play()
+
+    def hide(self):
+        self.hidden = True
+        self.hide_timer = pygame.time.get_ticks()
+        self.rect.center = (WIDTH // 2, HEIGHT + 200)
 
 
 # Asteroids
@@ -191,6 +211,7 @@ background_rect = background.get_rect()
 player_img = pygame.image.load(
     os.path.join(img_dir, "img", "playerShip3_blue.png")
 ).convert()
+player_mini_img = pygame.transform.scale(player_img, (25, 18))
 bullet_img = pygame.image.load(
     os.path.join(img_dir, "img", "laserRed16.png")
 ).convert()
@@ -229,6 +250,9 @@ for snd in ["exp1.wav", "exp2.wav"]:
 pygame.mixer.music.load(os.path.join(snd_dir,
                                      "sound",
                                      "tgfcoder-FrozenJam-SeamlessLoop.mp3"))
+player_death_sound = pygame.mixer.Sound(os.path.join(snd_dir,
+                                                     "sound",
+                                                     "rumble1.ogg"))
 
 # Intialising Sprites
 player = Player()
@@ -302,14 +326,18 @@ while running:
             player.health -= 35
         else:
             player.health -= 40
+
         if player.health < 0:
+            player_death_sound.play()
             death_explosion = Explosion(player.rect.center, "player")
             all_sprites.add(death_explosion)
-            player.kill()
+            player.hide()
+            player.lives -= 1
+            player.health = 100
         create_new_asteroid()
 
     #  If the player dies and the explosion is finished
-    if not player.alive() and not death_explosion.alive():
+    if player.lives == 0 and not death_explosion.alive():
         running = False
 
     # Draw / render
@@ -318,6 +346,7 @@ while running:
     all_sprites.draw(screen)
     draw_text(screen, str(score), 18, WIDTH/2, 10)
     draw_health_bar(screen, 5, 5, player.health)
+    draw_lives(screen, WIDTH-100, 5, player.lives, player_mini_img)
 
     # *after* drawing everything, flip the display
     pygame.display.flip()
