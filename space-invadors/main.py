@@ -63,6 +63,8 @@ def draw_lives(surf, x, y, lives, img):
 
 # Player
 class Player(pygame.sprite.Sprite):
+    POWERUP_TIME = 5000
+
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.transform.scale(player_img, (50, 40))
@@ -78,8 +80,24 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
+        self.power = 1
+        self.power_time = pygame.time.get_ticks()
+
+    def powerup(self, power):
+        if self.power != 1 and self.power == power:
+            self.POWERUP_TIME += 5000
+            return
+        else:
+            self.POWERUP_TIME = 5000
+        self.power = power
+        self.power_time = pygame.time.get_ticks()
 
     def update(self, *args):
+        if self.power >= 2 and \
+                pygame.time.get_ticks() - self.power_time > self.POWERUP_TIME:
+            self.power = 1
+            self.power_time = pygame.time.get_ticks()
+            self.POWERUP_TIME = 5000
         if self.hidden and pygame.time.get_ticks() - self.hide_timer > 1000:
             self.hidden = False
             self.rect.centerx = WIDTH // 2
@@ -105,9 +123,27 @@ class Player(pygame.sprite.Sprite):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            bullet = Bullet(self.rect.centerx, self.rect.top)
-            all_sprites.add(bullet)
-            bullets.add(bullet)
+            if self.power == 1:
+                bullet = Bullet(self.rect.centerx, self.rect.top)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
+            elif self.power == 2:
+                bullet1 = Bullet(self.rect.left, self.rect.centery)
+                bullet2 = Bullet(self.rect.right, self.rect.centery)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                bullets.add(bullet1)
+                bullets.add(bullet2)
+            elif self.power == 3:
+                bullet1 = Bullet(self.rect.left, self.rect.centery)
+                bullet2 = Bullet(self.rect.right, self.rect.centery)
+                bullet3 = Bullet(self.rect.centerx, self.rect.top)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                all_sprites.add(bullet3)
+                bullets.add(bullet1)
+                bullets.add(bullet2)
+                bullets.add(bullet3)
             shoot_snd.play()
 
     def hide(self):
@@ -182,7 +218,7 @@ class Bullet(pygame.sprite.Sprite):
 class Powerup(pygame.sprite.Sprite):
     def __init__(self, center):
         pygame.sprite.Sprite.__init__(self)
-        self.type = random.choice(["life", "2X"])
+        self.type = random.choice(["life", "2X", "3X"])
         self.image = powerup_imgs[self.type]
         self.rect = self.image.get_rect()
         self.rect.center = center
@@ -265,7 +301,10 @@ powerup_imgs = {"life": pygame.image.load(os.path.join(img_dir,
                                                        "shield.png")),
                 "2X": pygame.image.load(os.path.join(img_dir,
                                                      "img",
-                                                     "gun.png"))}
+                                                     "gun.png")),
+                "3X": pygame.image.load(os.path.join(img_dir,
+                                                     "img",
+                                                     "3X.png"))}
 
 # Load all the game sounds
 shoot_snd = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "shoot.wav"))
@@ -279,6 +318,8 @@ pygame.mixer.music.load(os.path.join(snd_dir,
 player_death_sound = pygame.mixer.Sound(os.path.join(snd_dir,
                                                      "sound",
                                                      "rumble1.ogg"))
+life_sound = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "pow5.wav"))
+gun_sound = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "pow4.wav"))
 
 # Intialising Sprites
 player = Player()
@@ -372,9 +413,16 @@ while running:
     if hits:
         for hit in hits:
             if hit.type == "life":
+                life_sound.play()
                 player.health += random.randint(20, 30)
                 if player.health > 100:
-                    player.health = 100
+                    player.health = 10
+            else:
+                gun_sound.play()
+                if hit.type == "2X":
+                    player.powerup(2)
+                elif hit.type == "3X":
+                    player.powerup(3)
 
     #  If the player dies and the explosion is finished
     if player.lives == 0 and not death_explosion.alive():
