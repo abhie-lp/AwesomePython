@@ -83,6 +83,12 @@ class Player(pygame.sprite.Sprite):
         self.power = 1
         self.power_time = pygame.time.get_ticks()
 
+    def die(self):
+        self.health = 100
+        self.lives -= 1
+        self.power = 1
+        self.POWERUP_TIME = 5000
+
     def powerup(self, power):
         if self.power != 1 and self.power == power:
             self.POWERUP_TIME += 5000
@@ -336,9 +342,12 @@ for i in range(8):
 
 score = 0
 
+pygame.mixer.music.play(loops=-1)
+pygame.mixer.music.set_volume(0.3)
+shoot_snd.set_volume(0.3)
+
 # Game loop
 running = True
-pygame.mixer.music.play(loops=-1)
 while running:
     # keep loop running at the right speed
     clock.tick(FPS)
@@ -403,9 +412,8 @@ while running:
             player_death_sound.play()
             death_explosion = Explosion(player.rect.center, "player")
             all_sprites.add(death_explosion)
+            player.die()
             player.hide()
-            player.lives -= 1
-            player.health = 100
         create_new_asteroid()
 
     # If POWERUPS hit the PLAYER
