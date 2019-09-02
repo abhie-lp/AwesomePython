@@ -178,6 +178,25 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
+# POWERUPS
+class Powerup(pygame.sprite.Sprite):
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.type = random.choice(["life", "2X"])
+        self.image = powerup_imgs[self.type]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.speedy = 5
+
+    def update(self, *args):
+        self.rect.y += self.speedy
+
+        # Kill it if it goes off the screen
+        if self.rect.top > HEIGHT:
+            self.kill()
+
+
+# EXPLOSION
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, center, size):
         pygame.sprite.Sprite.__init__(self)
@@ -241,6 +260,13 @@ for i in range(9):
     img = pygame.image.load(os.path.join(img_dir, "img", filename))
     expl_grphics["player"].append(img)
 
+powerup_imgs = {"life": pygame.image.load(os.path.join(img_dir,
+                                                       "img",
+                                                       "shield.png")),
+                "2X": pygame.image.load(os.path.join(img_dir,
+                                                     "img",
+                                                     "gun.png"))}
+
 # Load all the game sounds
 shoot_snd = pygame.mixer.Sound(os.path.join(snd_dir, "sound", "shoot.wav"))
 expl_sounds = []
@@ -260,6 +286,7 @@ player = Player()
 all_sprites = pygame.sprite.Group()
 asteroids = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+powerups = pygame.sprite.Group()
 
 # Registering the sprites
 all_sprites.add(player)
@@ -296,7 +323,7 @@ while running:
             elif hit.radius < 20:
                 score += 3
             else:
-                if hit.damage == 0:
+                if hit.damage <= 1:
                     score += 2
                 else:
                     hit.damage -= 1
@@ -309,6 +336,10 @@ while running:
                 all_sprites.add(expl)
                 random.choice(expl_sounds).play()
                 create_new_asteroid()
+                if random.random() > 0.9:
+                    power = Powerup(hit.rect.center)
+                    all_sprites.add(power)
+                    powerups.add(power)
 
     # If ASTEROIDS hits the PLAYER
     hits = pygame.sprite.spritecollide(player,
@@ -335,6 +366,15 @@ while running:
             player.lives -= 1
             player.health = 100
         create_new_asteroid()
+
+    # If POWERUPS hit the PLAYER
+    hits = pygame.sprite.spritecollide(player, powerups, True)
+    if hits:
+        for hit in hits:
+            if hit.type == "life":
+                player.health += random.randint(20, 30)
+                if player.health > 100:
+                    player.health = 100
 
     #  If the player dies and the explosion is finished
     if player.lives == 0 and not death_explosion.alive():
