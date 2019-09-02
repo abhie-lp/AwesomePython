@@ -168,12 +168,13 @@ class Asteroids(pygame.sprite.Sprite):
         self.radius = int(self.rect.width * .85 // 2)
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randint(-100, 100)
-        self.speedy = random.randint(1, 8)
+        self.speedy = random.randint(1, 6)
         self.speedx = random.choice([-6, -5, -4, -3, -2, 2, 3, 4, 5, 6])
         self.rot = 0
         self.rot_speed = random.randint(-8, 8)
         self.last_update = pygame.time.get_ticks()
         self.damage = 2
+        self.level = 1
 
     def rotate(self):
         now = pygame.time.get_ticks()
@@ -188,6 +189,27 @@ class Asteroids(pygame.sprite.Sprite):
             self.last_update = now
 
     def update(self, *args):
+        if score > 3500 and self.level != 8:
+            self.speedy = random.randint(15, 20)
+            self.level = 8
+        elif score > 3000 and self.level != 7:
+            self.speedy = random.randint(13, 18)
+            self.level = 7
+        elif score > 2500 and self.level != 6:
+            self.speedy = random.randint(11, 15)
+            self.level = 6
+        elif score > 2000 and self.level != 5:
+            self.speedy = random.randint(9, 13)
+            self.level = 5
+        elif score > 1500 and self.level != 4:
+            self.speedy = random.randint(7, 11)
+            self.level = 4
+        elif score > 1000 and self.level != 3:
+            self.speedy = random.randint(5, 9)
+            self.level = 3
+        elif score > 500 and self.level != 2:
+            self.speedy = random.randint(3, 8)
+            self.level = 2
         self.rotate()
         if self.rect.left < 0:
             self.speedx *= -1
@@ -386,7 +408,7 @@ while running:
                 all_sprites.add(expl)
                 random.choice(expl_sounds).play()
                 create_new_asteroid()
-                if random.random() > 0.9:
+                if random.random() > 0.85:
                     power = Powerup(hit.rect.center)
                     all_sprites.add(power)
                     powerups.add(power)
